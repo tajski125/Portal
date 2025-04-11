@@ -27,17 +27,34 @@ if (!$user) {
 }
 ?>
 
-<div class="form-container">
-    <h2>Witaj, <?php echo htmlspecialchars($user['username']); ?>!</h2>
-    <p>Wybierz jedną z dostępnych opcji:</p>
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h2>Witaj, <?php echo htmlspecialchars($user['username']); ?>!</h2>
+        <p>Wybierz jedną z dostępnych opcji:</p>
+    </div>
 
-    <div class="dashboard-menu">
-        <ul>
-            <li><a href="?action=edit-profile" class="btn-primary">Edytuj dane</a></li>
-            <li><a href="?action=manage-ads" class="btn-primary">Zarządzaj ogłoszeniami</a></li>
-            <li><a href="?action=delete-account" class="btn-danger">Usuń konto</a></li>
-            <li><a href="logout.php" class="btn-primary">Wyloguj się</a></li>
-        </ul>
+    <div class="dashboard-content">
+        <!-- Menu w formie kart -->
+        <div class="dashboard-card">
+            <h3>Edytuj dane</h3>
+            <p>Aktualizuj swoje dane osobowe.</p>
+            <a href="?action=edit-profile" class="btn-primary">Przejdź</a>
+        </div>
+        <div class="dashboard-card">
+            <h3>Zarządzaj ogłoszeniami</h3>
+            <p>Przeglądaj i zarządzaj swoimi ogłoszeniami.</p>
+            <a href="?action=manage-ads" class="btn-primary">Przejdź</a>
+        </div>
+        <div class="dashboard-card">
+            <h3>Usuń konto</h3>
+            <p>Usuń swoje konto z portalu.</p>
+            <a href="?action=delete-account" class="btn-danger">Przejdź</a>
+        </div>
+        <div class="dashboard-card">
+            <h3>Wyloguj się</h3>
+            <p>Bezpiecznie zakończ sesję.</p>
+            <a href="logout.php" class="btn-primary">Przejdź</a>
+        </div>
     </div>
 
     <div class="dashboard-content">
