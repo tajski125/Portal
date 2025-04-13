@@ -10,14 +10,14 @@ if (session_status() === PHP_SESSION_NONE) {
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<!-- Dodaj bibliotekę Algolia Places -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/places.js@1.19.0/dist/cdn/places.min.css">
-<script src="https://cdn.jsdelivr.net/npm/places.js@1.19.0/dist/cdn/places.min.js"></script>
+    <!-- Dodaj bibliotekę Algolia Places -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/places.js@1.19.0/dist/cdn/places.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/places.js@1.19.0/dist/cdn/places.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle ?? "Portal Ogłoszeniowy"; ?></title>
     <link rel="stylesheet" href="assets/css/style.css">
-	<script>
+    <script>
     document.addEventListener('DOMContentLoaded', function () {
         const inputLocation = document.getElementById('location');
         const suggestions = document.createElement('ul');
@@ -47,7 +47,7 @@ if (session_status() === PHP_SESSION_NONE) {
                 });
         });
     });
-</script>
+    </script>
 </head>
 <body>
     <header>
@@ -57,6 +57,7 @@ if (session_status() === PHP_SESSION_NONE) {
         <nav class="menu">
             <ul>
                 <li><a href="index.php">Strona główna</a></li>
+                <li><a href="ads.php">Ogłoszenia</a></li> <!-- Dodana zakładka "Ogłoszenia" -->
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <li><a href="dashboard.php">Moje Konto</a></li>
                     <li><a href="add-ad.php" class="btn-primary">Dodaj Ogłoszenie</a></li>

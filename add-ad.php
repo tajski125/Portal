@@ -23,27 +23,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = $_POST['price'] ?? '';
     $location = $_POST['location'] ?? '';
     $description = $_POST['description'] ?? '';
+    $category_id = $_POST['category_id'] ?? null; // Pobierz kategorię z formularza
 
+    // Walidacja danych
     if (empty($make) || empty($model) || empty($year) || empty($mileage) || empty($price) || empty($location)) {
         $errorMessages[] = 'Wszystkie pola są wymagane.';
     }
 
-    if (empty($errorMessages)) {
-        $stmt = $pdo->prepare("INSERT INTO ads (user_id, make, model, year, mileage, price, location, description)
-                               VALUES (:user_id, :make, :model, :year, :mileage, :price, :location, :description)");
-        $stmt->execute([
-            'user_id' => $_SESSION['user_id'],
-            'make' => $make,
-            'model' => $model,
-            'year' => $year,
-            'mileage' => $mileage,
-            'price' => $price,
-            'location' => $location,
-            'description' => $description,
-        ]);
+    if (empty($category_id)) {
+        $errorMessages[] = 'Proszę wybrać kategorię.';
+    }
 
-        header("Location: dashboard.php");
-        exit;
+    if (empty($errorMessages)) {
+        try {
+            $stmt = $pdo->prepare("INSERT INTO ads (user_id, make, model, year, mileage, price, location, description, category_id)
+                                   VALUES (:user_id, :make, :model, :year, :mileage, :price, :location, :description, :category_id)");
+            $stmt->execute([
+                'user_id' => $_SESSION['user_id'],
+                'make' => $make,
+                'model' => $model,
+                'year' => $year,
+                'mileage' => $mileage,
+                'price' => $price,
+                'location' => $location,
+                'description' => $description,
+                'category_id' => $category_id,
+            ]);
+
+            header("Location: dashboard.php");
+            exit;
+        } catch (PDOException $e) {
+            $errorMessages[] = "Wystąpił błąd podczas dodawania ogłoszenia: " . $e->getMessage();
+        }
     }
 }
 ?>
@@ -67,17 +78,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Marka -->
             <div class="form-group">
                 <label for="make">Marka:</label>
-                <select id="make" name="make" required>
-                    <option value="">Wybierz markę</option>
-                    <!-- Dynamically populated by JavaScript -->
-                </select>
+                <input type="text" id="make" name="make" placeholder="Wpisz markę" required>
             </div>
 
             <!-- Model -->
             <div class="form-group">
                 <label for="model">Model:</label>
-                <select id="model" name="model" required>
-                    <option value="">Najpierw wybierz markę</option>
+                <input type="text" id="model" name="model" placeholder="Wpisz model" required>
+            </div>
+
+            <!-- Kategoria -->
+            <div class="form-group">
+                <label for="category">Kategoria:</label>
+                <select id="category" name="category_id" required>
+                    <option value="">Wybierz kategorię</option>
+                    <?php
+                    // Pobierz kategorie z bazy danych
+                    $categories = $pdo->query("SELECT id, name FROM categories")->fetchAll(PDO::FETCH_ASSOC);
+                    foreach ($categories as $category) {
+                        echo '<option value="' . htmlspecialchars($category['id']) . '">' . htmlspecialchars($category['name']) . '</option>';
+                    }
+                    ?>
                 </select>
             </div>
 
@@ -111,10 +132,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <textarea id="description" name="description" rows="5" placeholder="Wpisz opis samochodu"></textarea>
             </div>
 
+            <!-- Zdjęcia -->
+            <div class="form-group">
+                <label for="images">Zdjęcia (maks. 5, do 3MB każda):</label>
+                <input type="file" id="images" name="images[]" multiple accept="image/*">
+            </div>
+
             <button type="submit" class="btn-primary">Dodaj ogłoszenie</button>
         </form>
     </div>
 </div>
+
 <style>
 /* Stylizacja formularza */
 .form-container {
@@ -160,17 +188,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     margin-bottom: 5px;
 }
 
-select, input, textarea {
+input, textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 16px;
-}
-
-select:disabled {
-    background-color: #f4f4f4;
-    color: #999;
 }
 
 button.btn-primary {
@@ -191,54 +214,6 @@ button.btn-primary:hover {
 }
 </style>
 
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const makeSelect = document.getElementById('make');
-    const modelSelect = document.getElementById('model');
-    const locationInput = document.getElementById('location');
-
-    // Pobierz marki samochodów z API
-    fetch('https://api-ninjas.com/api/cars?apikey=zJe/IeZILko8mDZjJ0HUcA==ZLMqzrDSPqWDGGCf')
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(car => {
-                const option = document.createElement('option');
-                option.value = car.make;
-                option.textContent = car.make;
-                makeSelect.appendChild(option);
-            });
-        })
-        .catch(error => console.error('Błąd podczas pobierania marek:', error));
-
-    // Pobierz modele dla wybranej marki
-    makeSelect.addEventListener('change', function () {
-        const selectedMake = this.value;
-
-        fetch(`https://api-ninjas.com/api/cars?make=${encodeURIComponent(selectedMake)}&apikey=zJe/IeZILko8mDZjJ0HUcA==ZLMqzrDSPqWDGGCf`)
-            .then(response => response.json())
-            .then(data => {
-                modelSelect.innerHTML = '<option value="">Wybierz model</option>';
-                data.forEach(car => {
-                    const option = document.createElement('option');
-                    option.value = car.model;
-                    option.textContent = car.model;
-                    modelSelect.appendChild(option);
-                });
-            })
-            .catch(error => console.error('Błąd podczas pobierania modeli:', error));
-    });
-
-    // Autouzupełnianie lokalizacji
-    locationInput.addEventListener('input', function () {
-        const query = this.value;
-
-        fetch(`https://maps.geoapify.com/v1/tile/carto/{z}/{x}/{y}.png?&apiKey=7be45e4cb5964056a92f51f6cf7bf4c4`)
-            .then(response => response.json())
-            .then(data => {
-                console.log('Propozycje lokalizacji:', data);
-            })
-            .catch(error => console.error('Błąd podczas autouzupełniania lokalizacji:', error));
-    });
-});
-</script>
+<?php
+require 'partials/footer.php';
+?>
