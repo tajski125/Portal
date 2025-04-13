@@ -13,10 +13,6 @@ if (!isset($_SESSION['user_id'])) {
 $pageTitle = "Dodaj Ogłoszenie";
 require 'partials/header.php';
 
-// Pobranie marek z lokalnej bazy danych
-$query = "SELECT DISTINCT brand FROM car_brands_models ORDER BY brand ASC";
-$brands = $pdo->query($query)->fetchAll(PDO::FETCH_ASSOC);
-
 // Obsługa formularza
 $errorMessages = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -50,16 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 }
-
-// Pobranie modeli dla wybranej marki (AJAX)
-if (isset($_GET['brand'])) {
-    $brand = $_GET['brand'];
-    $query = "SELECT model FROM car_brands_models WHERE brand = :brand ORDER BY model ASC";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute(['brand' => $brand]);
-    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
-    exit;
-}
 ?>
 
 <div class="form-container">
@@ -83,11 +69,7 @@ if (isset($_GET['brand'])) {
                 <label for="make">Marka:</label>
                 <select id="make" name="make" required>
                     <option value="">Wybierz markę</option>
-                    <?php foreach ($brands as $brand): ?>
-                        <option value="<?php echo htmlspecialchars($brand['brand']); ?>">
-                            <?php echo htmlspecialchars($brand['brand']); ?>
-                        </option>
-                    <?php endforeach; ?>
+                    <!-- Dynamically populated by JavaScript -->
                 </select>
             </div>
 
@@ -129,43 +111,10 @@ if (isset($_GET['brand'])) {
                 <textarea id="description" name="description" rows="5" placeholder="Wpisz opis samochodu"></textarea>
             </div>
 
-            <div class="form-group">
-                <label for="images">Zdjęcia (maks. 5, do 3MB każda):</label>
-                <input type="file" id="images" name="images[]" multiple accept="image/*">
-            </div>
-
             <button type="submit" class="btn-primary">Dodaj ogłoszenie</button>
         </form>
     </div>
 </div>
-
-<script>
-// Pobieranie modeli na podstawie wybranej marki
-document.getElementById('make').addEventListener('change', function () {
-    const brand = this.value;
-    const modelSelect = document.getElementById('model');
-
-    if (brand) {
-        fetch(`add-ad.php?brand=${encodeURIComponent(brand)}`)
-            .then(response => response.json())
-            .then(data => {
-                modelSelect.innerHTML = '<option value="">Wybierz model</option>';
-                data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.model;
-                    option.textContent = item.model;
-                    modelSelect.appendChild(option);
-                });
-                modelSelect.disabled = false;
-            })
-            .catch(error => console.error('Błąd podczas pobierania modeli:', error));
-    } else {
-        modelSelect.innerHTML = '<option value="">Najpierw wybierz markę</option>';
-        modelSelect.disabled = true;
-    }
-});
-</script>
-
 <style>
 /* Stylizacja formularza */
 .form-container {
@@ -242,6 +191,54 @@ button.btn-primary:hover {
 }
 </style>
 
-<?php
-require 'partials/footer.php';
-?>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const makeSelect = document.getElementById('make');
+    const modelSelect = document.getElementById('model');
+    const locationInput = document.getElementById('location');
+
+    // Pobierz marki samochodów z API
+    fetch('https://api-ninjas.com/api/cars?apikey=YOUR_API_KEY')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(car => {
+                const option = document.createElement('option');
+                option.value = car.make;
+                option.textContent = car.make;
+                makeSelect.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Błąd podczas pobierania marek:', error));
+
+    // Pobierz modele dla wybranej marki
+    makeSelect.addEventListener('change', function () {
+        const selectedMake = this.value;
+
+        fetch(`https://api-ninjas.com/api/cars?make=${encodeURIComponent(selectedMake)}&apikey=YOUR_API_KEY`)
+            .then(response => response.json())
+            .then(data => {
+                modelSelect.innerHTML = '<option value="">Wybierz model</option>';
+                data.forEach(car => {
+                    const option = document.createElement('option');
+                    option.value = car.model;
+                    option.textContent = car.model;
+                    modelSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Błąd podczas pobierania modeli:', error));
+    });
+
+    // Autouzupełnianie lokalizacji
+    locationInput.addEventListener('input', function () {
+        const query = this.value;
+
+        fetch(`https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=YOUR_API_KEY`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Propozycje lokalizacji:', data);
+            })
+            .catch(error => console.error('Błąd podczas autouzupełniania lokalizacji:', error));
+    });
+});
+</script>
