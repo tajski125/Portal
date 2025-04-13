@@ -199,7 +199,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const locationInput = document.getElementById('location');
 
     // Pobierz marki samochodów z API
-    fetch('https://api-ninjas.com/api/cars?apikey=YOUR_API_KEY')
+    fetch('https://api-ninjas.com/api/cars?apikey=zJe/IeZILko8mDZjJ0HUcA==ZLMqzrDSPqWDGGCf')
         .then(response => response.json())
         .then(data => {
             data.forEach(car => {
@@ -215,7 +215,7 @@ document.addEventListener("DOMContentLoaded", function () {
     makeSelect.addEventListener('change', function () {
         const selectedMake = this.value;
 
-        fetch(`https://api-ninjas.com/api/cars?make=${encodeURIComponent(selectedMake)}&apikey=YOUR_API_KEY`)
+        fetch(`https://api-ninjas.com/api/cars?make=${encodeURIComponent(selectedMake)}&apikey=zJe/IeZILko8mDZjJ0HUcA==ZLMqzrDSPqWDGGCf`)
             .then(response => response.json())
             .then(data => {
                 modelSelect.innerHTML = '<option value="">Wybierz model</option>';
@@ -233,7 +233,7 @@ document.addEventListener("DOMContentLoaded", function () {
     locationInput.addEventListener('input', function () {
         const query = this.value;
 
-        fetch(`https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=YOUR_API_KEY`)
+        fetch(`https://maps.geoapify.com/v1/tile/carto/{z}/{x}/{y}.png?&apiKey=7be45e4cb5964056a92f51f6cf7bf4c4`)
             .then(response => response.json())
             .then(data => {
                 console.log('Propozycje lokalizacji:', data);
